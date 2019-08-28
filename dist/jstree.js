@@ -1632,7 +1632,7 @@
 						parse_flat = function (d, p, ps) {
 							if(!ps) { ps = []; }
 							else { ps = ps.concat(); }
-							if(p) { ps.unshift(p); }
+							if(p && ps.indexOf(p) == -1) { ps.unshift(p); }
 							var tid = d.id.toString(),
 								i, j, c, e,
 								tmp = {
@@ -1719,7 +1719,7 @@
 						parse_nest = function (d, p, ps) {
 							if(!ps) { ps = []; }
 							else { ps = ps.concat(); }
-							if(p) { ps.unshift(p); }
+							if(p && ps.indexOf(p) == -1) { ps.unshift(p); }
 							var tid = false, i, j, c, e, tmp;
 							do {
 								tid = 'j' + t_id + '_' + (++t_cnt);
@@ -1846,13 +1846,15 @@
 						}
 						// 3) normalize && populate parents and children_d with recursion
 						for(i = 0, j = p.children.length; i < j; i++) {
-							tmp = parse_flat(m[p.children[i]], par, p.parents.concat());
+							tmp = parse_flat(m[p.children[i]], p.parent ? p.parent : par, p.parents.concat());
 							dpc.push(tmp);
 							if(m[tmp].children_d.length) {
 								dpc = dpc.concat(m[tmp].children_d);
 							}
 						}
 						for(i = 0, j = p.parents.length; i < j; i++) {
+							if (m[p.parents[i]].children_d.indexOf(par) >= 0)
+								m[p.parents[i]].children_d.splice(m[p.parents[i]].children_d.indexOf(par), 1);
 							m[p.parents[i]].children_d = m[p.parents[i]].children_d.concat(dpc);
 						}
 						// ?) three_state selection - p.state.selected && t - (if three_state foreach(dat => ch) -> foreach(parents) if(parent.selected) child.selected = true;
@@ -1867,7 +1869,7 @@
 					}
 					else {
 						for(i = 0, j = dat.length; i < j; i++) {
-							tmp = parse_nest(dat[i], par, p.parents.concat());
+							tmp = parse_nest(dat[i], p.parent ? p.parent : par, p.parents.concat());
 							if(tmp) {
 								chd.push(tmp);
 								dpc.push(tmp);
@@ -1879,6 +1881,8 @@
 						p.children = chd;
 						p.children_d = dpc;
 						for(i = 0, j = p.parents.length; i < j; i++) {
+							if (m[p.parents[i]].children_d.indexOf(par) >= 0)
+								m[p.parents[i]].children_d.splice(m[p.parents[i]].children_d.indexOf(par), 1);
 							m[p.parents[i]].children_d = m[p.parents[i]].children_d.concat(dpc);
 						}
 						rslt = {
